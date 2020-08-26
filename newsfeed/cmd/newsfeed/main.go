@@ -8,8 +8,8 @@ import (
 	g "articles/newsfeed/internal/pkg/grpc"
 	"articles/newsfeed/internal/repository"
 	cService "articles/newsfeed/internal/service/cards"
-	"articles/pb"
 	"context"
+	"github.com/zale144/articles/pb"
 	"log"
 )
 

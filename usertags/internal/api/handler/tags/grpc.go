@@ -1,10 +1,10 @@
 package tags
 
 import (
-	"articles/pb"
 	"articles/usertags/internal/dto"
 	"context"
 	"errors"
+	"github.com/zale144/articles/pb"
 )
 
 type Tags struct {

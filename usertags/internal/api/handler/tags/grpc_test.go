@@ -1,21 +1,22 @@
 package tags
 
 import (
-	"articles/pb"
+	"articles/usertags/internal/dto"
 	"context"
 	"errors"
+	"github.com/zale144/articles/pb"
 	"reflect"
 	"testing"
 )
 
 type mockUserTagsService struct {
-	fail    bool
-	tags []string
+	fail bool
+	tags dto.GetTagsPayload
 }
 
-func (m mockUserTagsService) GetUserTags(string) ([]string, error) {
+func (m mockUserTagsService) Get(string) (dto.GetTagsPayload, error) {
 	if m.fail {
-		return nil, errors.New("")
+		return dto.GetTagsPayload{}, errors.New("")
 	}
 	return m.tags, nil
 }
@@ -39,7 +40,9 @@ func TestUser_GetUserTags(t *testing.T) {
 			name: "success",
 			fields: fields{
 				tagSrvc: mockUserTagsService{
-					tags: []string{"tag1", "tag2"},
+					tags: dto.GetTagsPayload{
+						Tags: []string{"tag1", "tag2"},
+					},
 				},
 			},
 			args: args{
@@ -49,7 +52,7 @@ func TestUser_GetUserTags(t *testing.T) {
 				},
 			},
 			wantRsp: &pb.UserTagsRsp{
-				Tags:  []string{"tag1", "tag2"},
+				Tags: []string{"tag1", "tag2"},
 			},
 		},
 	}

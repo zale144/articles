@@ -3,8 +3,8 @@ package cards
 import (
 	"articles/newsfeed/internal/dto"
 	"articles/newsfeed/internal/model"
-	"articles/pb"
 	"context"
+	"github.com/zale144/articles/pb"
 )
 
 type CardsService struct {

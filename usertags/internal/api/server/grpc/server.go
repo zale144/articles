@@ -1,11 +1,11 @@
 package grpc
 
 import (
-	"articles/pb"
 	"articles/usertags/internal/api/handler/tags"
 	c "articles/usertags/internal/config"
 	"github.com/pkg/errors"
 	v "github.com/spf13/viper"
+	"github.com/zale144/articles/pb"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -20,7 +20,6 @@ func Start(tagsHnd tags.Tags) error {
 	}
 
 	grpcServer := grpc.NewServer()
-
 
 	pb.RegisterTagsServiceServer(grpcServer, tagsHnd)
 

@@ -5,6 +5,6 @@ WORKDIR /app
 COPY ./usertags/go.mod ./usertags/go.sum ./
 RUN go mod download
 
-COPY .. .
+COPY ./usertags .
 
-EXPOSE 4000
+EXPOSE 8001

@@ -1,8 +1,10 @@
 package repository
 
 import (
+	c "articles/newsfeed/internal/config"
 	"articles/newsfeed/internal/model"
 	"context"
+	v "github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -19,7 +21,7 @@ func NewStore(cln *mongo.Client) Store {
 }
 
 func (u Store) GetCards(tags []string, matchAll bool) ([]model.Card, error) {
-	col := u.client.Database("news").Collection("cards")
+	col := u.client.Database(v.GetString(c.DBName)).Collection("cards")
 
 	op := "$in"
 	if matchAll{
@@ -67,7 +69,7 @@ func (u Store) GetCards(tags []string, matchAll bool) ([]model.Card, error) {
 }
 
 func (u Store) AddCard(card *model.Card) error {
-	col := u.client.Database("news").Collection("cards")
+	col := u.client.Database(v.GetString(c.DBName)).Collection("cards")
 	_, err := col.InsertOne(context.TODO(), card)
 	return err
 }

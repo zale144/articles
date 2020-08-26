@@ -17,7 +17,7 @@ type CardService interface {
 func Get(svc CardService) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		email := "user@example.com"//c.Get("email").(string)
+		email := c.Get("email").(string)
 
 		cards, err := svc.GetByUser(email)
 		if err != nil {

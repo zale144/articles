@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY ./newsfeed/go.mod ./newsfeed/go.sum ./
 RUN go mod download
-pb
-COPY .. .
 
-EXPOSE 4000
+COPY ./newsfeed ./
+
+EXPOSE 8002
