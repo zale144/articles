@@ -1,0 +1,14 @@
+---
+jwtsecret: "$P$Bd2WdVjaRR/De58OX2qVu3XA6aiPaf."
+http:
+  port: "8000"
+grpc:
+  host: "usertags"
+  port: "8001"
+
+db:
+  host: "pg"
+  port: "5432"
+  name: "postgres"
+  user: "user1"
+  password: "pass123"

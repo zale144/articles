@@ -1,0 +1,14 @@
+---
+jwtsecret: "$P$Bd2WdVjaRR/De58OX2qVu3XA6aiPaf."
+http:
+  port: "8002"
+grpc:
+  host: "usertags"
+  port: "8001"
+
+db:
+  host: "mongo"
+  port: "27017"
+  name: "news"
+  user: "root"
+  password: "rootpassword"

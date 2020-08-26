@@ -1,0 +1,64 @@
+version: "3.7"
+
+volumes:
+  articlespgvolume:
+    name: articles-pg-volume
+  mongodb_data_container:
+
+networks:
+  articlesnetwork:
+    name: articles-network
+
+services:
+  pg:
+    image: postgres:12.1
+    restart: on-failure
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - articlespgvolume:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - articlesnetwork
+  mongo:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+    networks:
+      - articlesnetwork
+  usertags:
+    build:
+      context: .
+      dockerfile: usertags/Dockerfile
+    restart: on-failure
+    depends_on:
+      - pg
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+    networks:
+      - articlesnetwork
+    env_file:
+      - .env
+    entrypoint: ["/bin/bash", "./entrypoint.sh"]
+  newsfeed:
+    build:
+      context: .
+      dockerfile: newsfeed/Dockerfile
+    restart: on-failure
+    depends_on:
+      - mongo
+      - usertags
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+    networks:
+      - articlesnetwork
+    env_file:
+      - .env
+    entrypoint: ["/bin/bash", "./entrypoint.sh"]

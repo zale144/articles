@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pb;
+
+message UserTagsReq {
+    string email = 1;
+}
+
+message UserTagsRsp {
+    repeated string tags = 1;
+}
+
+service TagsService {
+    rpc GetUserTags(UserTagsReq) returns (UserTagsRsp) {}
+}
