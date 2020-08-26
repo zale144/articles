@@ -3,7 +3,7 @@ module articles/usertags
 go 1.14
 
 require (
-    github.com/zale144/articles/pb v0.0.0
+    github.com/zale144/articles/pb latest
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-playground/validator/v10 v10.3.0
 	github.com/jinzhu/gorm v1.9.16
