@@ -8,11 +8,12 @@ import (
 	"articles/newsfeed/internal/pkg/db"
 	"context"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -70,25 +71,18 @@ func TestStore_AddCard(t *testing.T) {
 			u := Store{
 				client: tt.fields.client,
 			}
-			if err := u.AddCard(&tt.args.card); (err != nil) != tt.wantErr {
-				t.Errorf("AddCard() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
+			err := u.AddCard(&tt.args.card)
 			if !tt.wantErr {
-				cards, err := u.Find(bson.D{})
-				if err != nil {
-					t.Errorf("Find() error = %v", err)
-				}
-
-				l := len(cards)
-				if l != 1 {
-					t.Errorf("len() = %v, wantLen %v", l, 1)
-				} else {
-					if !reflect.DeepEqual(cards[0], tt.args.card) {
-						t.Errorf("GetCards() got = %v, want %v", cards[0], tt.args.card)
-					}
-				}
+				require.Nil(t, err, "failed to execute AddCard()")
 			}
+
+			res := u.client.Database(viper.GetString(config.DBName)).Collection("cards").FindOne(context.TODO(), bson.D{}, options.FindOne())
+			require.NotNil(t, res, "card not found")
+
+			card := model.Card{}
+			err = res.Decode(&card)
+			require.Nil(t, err, "error decoding result from database")
+			assert.Equal(t, card, tt.args.card, "the saved card does not match the retrieved one")
 		})
 	}
 }
@@ -114,10 +108,10 @@ func TestStore_GetCards(t *testing.T) {
 		matchAll bool
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []model.Card
+		name   string
+		fields fields
+		args   args
+		want   []model.Card
 	}{
 		{
 			name: "success: match any",
@@ -178,14 +172,11 @@ func TestStore_GetCards(t *testing.T) {
 			u := Store{
 				client: tt.fields.client,
 			}
+
 			got, err := u.GetCards(tt.args.tags, tt.args.matchAll)
-			if err != nil {
-				t.Errorf("GetCards() error = %v", err)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetCards() got = %v, want %v", got, tt.want)
-			}
+			require.Nil(t, err, "failed to execute GetCards()")
+
+			assert.Equal(t, got, tt.want, "the retrieved cards do not match the expected ones")
 		})
 	}
 }

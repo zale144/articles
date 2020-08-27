@@ -8,11 +8,12 @@ import (
 	"errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
 	"testing"
 )
 
@@ -56,7 +57,7 @@ func TestAdd(t *testing.T) {
 					Tags: []string{"tag1", "tag2"},
 				},
 			},
-			want: "could not add tag: internal",
+			want:     "could not add tag: internal",
 			wantCode: http.StatusBadRequest,
 		},
 	}
@@ -87,24 +88,16 @@ func TestAdd(t *testing.T) {
 			ctx.Set("email", "user@test.com")
 
 			err := Add(tt.args.svc)(ctx)
-			if err != nil {
-				t.Error(err)
-			}
-
-			if rec.Code != tt.wantCode {
-				t.Errorf("Add() = %v, wantCode %v", rec.Code, tt.wantCode)
-			}
+			require.Nil(t, err, "error getting card", err)
+			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
 
-			rsp := &dto.ResponseMessage{}
-			_ = json.Unmarshal(buf, rsp)
+			rsp := dto.ResponseMessage{}
+			_ = json.Unmarshal(buf, &rsp)
 
-
-			if rsp.Message != tt.want {
-				t.Errorf("Add() = %v, want %v", rsp.Message, tt.want)
-			}
+			assert.Equal(t, rsp.Message, tt.want, "response does not match expected output")
 		})
 	}
 }
@@ -120,7 +113,7 @@ func (m mockTagService) Get(string) (dto.GetTagsPayload, error) {
 
 func TestGet(t *testing.T) {
 	type args struct {
-		svc  TagService
+		svc TagService
 	}
 	tests := []struct {
 		name     string
@@ -133,7 +126,7 @@ func TestGet(t *testing.T) {
 			args: args{
 				svc: mockTagService{},
 			},
-			want:    []string{"tag1", "tag2"},
+			want:     []string{"tag1", "tag2"},
 			wantCode: http.StatusOK,
 		}, {
 			name: "fail service",
@@ -159,32 +152,24 @@ func TestGet(t *testing.T) {
 			rec := httptest.NewRecorder()
 
 			ctx := e.NewContext(&http.Request{
-				Method:        echo.GET,
-				URL:           &url.URL{},
-				Header:        h,
+				Method: echo.GET,
+				URL:    &url.URL{},
+				Header: h,
 			}, rec)
 
 			ctx.Set("email", "user@test.com")
 
 			err := Get(tt.args.svc)(ctx)
-			if err != nil {
-				t.Error(err)
-			}
-
-			if rec.Code != tt.wantCode {
-				t.Errorf("Get() = %v, wantCode %v", rec.Code, tt.wantCode)
-			}
+			require.Nil(t, err, "error getting card", err)
+			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
 
-			rsp := &dto.GetTagsPayload{}
-			_ = json.Unmarshal(buf, rsp)
+			rsp := dto.GetTagsPayload{}
+			_ = json.Unmarshal(buf, &rsp)
 
-
-			if !reflect.DeepEqual(rsp.Tags, tt.want) {
-				t.Errorf("Get() = %v, want %v", rsp.Tags, tt.want)
-			}
+			assert.Equal(t, rsp.Tags, tt.want, "response does not match expected output")
 		})
 	}
 }

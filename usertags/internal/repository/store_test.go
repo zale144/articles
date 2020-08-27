@@ -7,8 +7,9 @@ import (
 	"articles/usertags/internal/model"
 	"articles/usertags/internal/pkg/db"
 	"github.com/jinzhu/gorm"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"log"
-	"reflect"
 	"testing"
 )
 
@@ -87,20 +88,22 @@ func TestStore_AddTagsToUser(t *testing.T) {
 				db: tt.fields.db,
 			}
 
-			if err := u.AddTagsToUser(&tt.args.user); (err != nil) != tt.wantErr {
-				t.Errorf("AddTagsToUser() error = %v, wantErr %v", err, tt.wantErr)
-			} else if !tt.wantErr {
-				var exists []model.User
+			err := u.AddTagsToUser(&tt.args.user)
+			if !tt.wantErr {
+				require.Nil(t, err, "error executing AddTagsToUser()")
+			}
 
-				dbc.Model(user).Preload("Tags").Where(tt.args.user).Find(&exists)
+			exists := &model.User{}
 
-				if l := len(exists); l == 0 {
-					t.Errorf("Find() len() = %v, wantLen %v", l, 1)
-				} else {
-					if reflect.DeepEqual(exists[0].Tags, tt.args.user.Tags) {
-						t.Errorf("Find() got = %v, want %v", exists[0].Tags, tt.args.user.Tags)
-					}
-				}
+			err = dbc.Model(user).Preload("Tags").Where(tt.args.user).First(exists).Error
+			if !tt.wantErr {
+				require.Nil(t, err, "error retrieving user")
+				require.NotNil(t, exists)
+
+				assert.Equal(t, exists.Name, tt.args.user.Name, "the saved user's Name does not match the retrieved one")
+				assert.Equal(t, exists.Password, tt.args.user.Password, "the saved user's Password does not match the retrieved one")
+				assert.Equal(t, exists.Email, tt.args.user.Email, "the saved user's Email does not match the retrieved one")
+				assert.Equal(t, len(exists.Tags), len(tt.args.user.Tags), "the saved user's Tags do not match the retrieved one")
 			}
 		})
 	}
@@ -151,20 +154,23 @@ func TestStore_CreateUser(t *testing.T) {
 			u := Store{
 				db: tt.fields.db,
 			}
-			if err := u.CreateUser(&tt.args.user); (err != nil) != tt.wantErr {
-				t.Errorf("CreateUser() error = %v, wantErr %v", err, tt.wantErr)
-			} else if !tt.wantErr {
-				var exists []model.User
 
-				dbc.Model(user).Where(tt.args.user).Find(&exists)
+			err := u.CreateUser(&tt.args.user)
+			if !tt.wantErr {
+				require.Nil(t, err, "error executing CreateUser()")
+			}
 
-				if l := len(exists); l == 0 {
-					t.Errorf("Find() len() = %v, wantLen %v", l, 1)
-				} else if !tt.wantErr {
-					if exists[0].Email != tt.args.user.Email {
-						t.Errorf("Find() got = %v, want %v", exists[0].Email, tt.args.user.Email)
-					}
-				}
+			exists := &model.User{}
+
+			err = dbc.Model(user).Where(tt.args.user).First(&exists).Error
+			if !tt.wantErr {
+				require.Nil(t, err, "error retrieving user")
+				require.NotNil(t, exists)
+
+				assert.Equal(t, exists.Name, tt.args.user.Name, "the saved user's Name does not match the retrieved one")
+				assert.Equal(t, exists.Password, tt.args.user.Password, "the saved user's Password does not match the retrieved one")
+				assert.Equal(t, exists.Email, tt.args.user.Email, "the saved user's Email does not match the retrieved one")
+				assert.Equal(t, len(exists.Tags), len(tt.args.user.Tags), "the saved user's Tags do not match the retrieved one")
 			}
 		})
 	}
@@ -203,7 +209,7 @@ func TestStore_GetUser(t *testing.T) {
 				email:    user.Email,
 				withTags: false,
 			},
-			want: user,
+			want:    user,
 			wantErr: false,
 		},
 	}
@@ -214,19 +220,15 @@ func TestStore_GetUser(t *testing.T) {
 			}
 
 			got, err := u.GetUser(tt.args.email, tt.args.withTags)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetUser() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			} else if !tt.wantErr && got != nil {
-
-				if got.Email != tt.want.Email {
-					t.Errorf("GetUser().Email got = %v, want %v", got.Email, tt.want.Email)
-				}
-
-				if !reflect.DeepEqual(got.Email, tt.want.Email) {
-					t.Errorf("GetUser().Tags got = %v, want %v", got.Tags, tt.want.Tags)
-				}
+			if !tt.wantErr {
+				require.Nil(t, err, "error executing GetUser()")
 			}
+			require.NotNil(t, got, "user must not be nil")
+
+			assert.Equal(t, got.Name, user.Name, "the saved user's Name does not match the retrieved one")
+			assert.Equal(t, got.Password, user.Password, "the saved user's Password does not match the retrieved one")
+			assert.Equal(t, got.Email, user.Email, "the saved user's Email does not match the retrieved one")
+			assert.Equal(t, got.Tags, user.Tags, "the saved user's Tags do not match the retrieved one")
 		})
 	}
 }

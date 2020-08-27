@@ -8,8 +8,10 @@ require (
 	github.com/jinzhu/gorm v1.9.16
 	github.com/labstack/echo/v4 v4.1.16
 	github.com/lib/pq v1.8.0
+	github.com/magiconair/properties v1.8.1
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.4.0
 	github.com/zale144/articles/pb v0.0.0-20200826171719-3b64cb89c3be
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect

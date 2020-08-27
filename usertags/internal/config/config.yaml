@@ -9,6 +9,6 @@ grpc:
 db:
   host: "pg"
   port: "5432"
-  name: "postgres"
+  name: "usertags"
   user: "user1"
   password: "pass123"

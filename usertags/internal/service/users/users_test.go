@@ -4,6 +4,8 @@ import (
 	"articles/usertags/internal/dto"
 	"articles/usertags/internal/model"
 	"errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 	"testing"
 )
@@ -68,7 +70,7 @@ func TestUser_Login(t *testing.T) {
 			fields: fields{
 				store: mockStore{fail: true},
 			},
-			args: args{},
+			args:    args{},
 			wantErr: true,
 		},
 	}
@@ -78,14 +80,12 @@ func TestUser_Login(t *testing.T) {
 				store: tt.fields.store,
 			}
 			got, err := r.Login(tt.args.userDto)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Login() error = %v, wantErr %v", err, tt.wantErr)
+			if !tt.wantErr {
+				require.Nil(t, err, "error while logging in", err)
 				return
-			} else if !tt.wantErr {
-				if got == "" {
-					t.Errorf("Login() got = %v", got)
-				}
 			}
+
+			assert.Empty(t, got, "Token is empty")
 		})
 	}
 }
@@ -140,8 +140,9 @@ func TestUser_Register(t *testing.T) {
 			r := User{
 				store: tt.fields.store,
 			}
-			if err := r.Register(tt.args.userDto); (err != nil) != tt.wantErr {
-				t.Errorf("Register() error = %v, wantErr %v", err, tt.wantErr)
+			err := r.Register(tt.args.userDto)
+			if !tt.wantErr {
+				require.Nil(t, err, "error while registering", err)
 			}
 		})
 	}

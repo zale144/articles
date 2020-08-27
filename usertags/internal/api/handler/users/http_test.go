@@ -9,6 +9,8 @@ import (
 	"errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -85,23 +87,16 @@ func TestLogin(t *testing.T) {
 			}, rec)
 
 			err := users.Login(tt.args.svc)(ctx)
-			if err != nil {
-				t.Error(err)
-			}
-
-			if rec.Code != tt.wantCode {
-				t.Errorf("Login() = %v, wantCode %v", rec.Code, tt.wantCode)
-			}
+			require.Nil(t, err, "error getting card", err)
+			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
 
-			rsp := &dto.LoginResponse{}
-			_ = json.Unmarshal(buf, rsp)
+			rsp := dto.LoginResponse{}
+			_ = json.Unmarshal(buf, &rsp)
 
-			if rsp.Token != tt.want {
-				t.Errorf("Login() = %v, want %v", rsp.Token, tt.want)
-			}
+			assert.Equal(t, rsp.Token, tt.want, "response does not match expected output")
 		})
 	}
 }
@@ -178,13 +173,8 @@ func TestRegister(t *testing.T) {
 			}, rec)
 
 			err := users.Register(tt.args.svc)(ctx)
-			if err != nil {
-				t.Error(err)
-			}
-
-			if rec.Code != tt.wantCode {
-				t.Errorf("Register() = %v, wantCode %v", rec.Code, tt.wantCode)
-			}
+			require.Nil(t, err, "error getting card", err)
+			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
@@ -192,9 +182,7 @@ func TestRegister(t *testing.T) {
 			rsp := &dto.ResponseMessage{}
 			_ = json.Unmarshal(buf, rsp)
 
-			if rsp.Message != tt.want {
-				t.Errorf("Register() = %v, want %v", rsp.Message, tt.want)
-			}
+			assert.Equal(t, rsp.Message, tt.want, "response does not match expected output")
 		})
 	}
 }

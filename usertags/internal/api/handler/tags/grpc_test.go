@@ -4,8 +4,9 @@ import (
 	"articles/usertags/internal/dto"
 	"context"
 	"errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zale144/articles/pb"
-	"reflect"
 	"testing"
 )
 
@@ -62,13 +63,11 @@ func TestUser_GetUserTags(t *testing.T) {
 				tagSrvc: tt.fields.tagSrvc,
 			}
 			gotRsp, err := u.GetUserTags(tt.args.ctx, tt.args.in)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetUserTags() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if !tt.wantErr {
+				require.Nil(t, err, "failed to execute GetUserTags()")
 			}
-			if !reflect.DeepEqual(gotRsp, tt.wantRsp) {
-				t.Errorf("GetUserTags() gotRsp = %v, want %v", gotRsp, tt.wantRsp)
-			}
+
+			assert.Equal(t, gotRsp, tt.wantRsp, "response does not match expected output")
 		})
 	}
 }

@@ -5,9 +5,10 @@ import (
 	"articles/newsfeed/internal/model"
 	"context"
 	"errors"
+	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zale144/articles/pb"
 	"google.golang.org/grpc"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -61,7 +62,7 @@ func TestCardsService_Add(t *testing.T) {
 		}, {
 			name: "fail store",
 			fields: fields{
-				store:  mockStore{
+				store: mockStore{
 					fail: true,
 				},
 				client: nil,
@@ -75,8 +76,10 @@ func TestCardsService_Add(t *testing.T) {
 				store:  tt.fields.store,
 				client: tt.fields.client,
 			}
-			if err := c.Add(tt.args.crd); (err != nil) != tt.wantErr {
-				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
+
+			err := c.Add(tt.args.crd)
+			if !tt.wantErr {
+				require.Nil(t, err, "failed to add card", err)
 			}
 		})
 	}
@@ -100,7 +103,7 @@ func TestCardsService_GetByTags(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				store:  mockStore{},
+				store: mockStore{},
 			},
 			args: args{
 				tags: []string{"tag1", "tag2"},
@@ -112,11 +115,11 @@ func TestCardsService_GetByTags(t *testing.T) {
 		}, {
 			name: "fail store",
 			fields: fields{
-				store:  mockStore{
+				store: mockStore{
 					fail: true,
 				},
 			},
-			want: dto.GetCardsPayload{},
+			want:    dto.GetCardsPayload{},
 			wantErr: true,
 		},
 	}
@@ -126,14 +129,13 @@ func TestCardsService_GetByTags(t *testing.T) {
 				store:  tt.fields.store,
 				client: tt.fields.client,
 			}
+
 			got, err := c.GetByTags(tt.args.tags)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetByTags() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if !tt.wantErr {
+				require.Nil(t, err, "failed to execute GetByTags()")
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetByTags() got = %v, want %v", got, tt.want)
-			}
+
+			assert.Equal(t, got, tt.want, "response does not match expected output")
 		})
 	}
 }
@@ -147,7 +149,7 @@ func (c mockClient) GetUserTags(ctx context.Context, in *pb.UserTagsReq, opts ..
 		return nil, errors.New("")
 	}
 	return &pb.UserTagsRsp{
-		Tags:                 nil,
+		Tags: nil,
 	}, nil
 }
 
@@ -182,7 +184,7 @@ func TestCardsService_GetByUser(t *testing.T) {
 		}, {
 			name: "fail store",
 			fields: fields{
-				store:  mockStore{
+				store: mockStore{
 					fail: true,
 				},
 				client: mockClient{},
@@ -190,17 +192,17 @@ func TestCardsService_GetByUser(t *testing.T) {
 			args: args{
 				email: "user@test.com",
 			},
-			want: dto.GetCardsPayload{},
+			want:    dto.GetCardsPayload{},
 			wantErr: true,
 		}, {
 			name: "fail client",
 			fields: fields{
-				store:  mockStore{},
+				store: mockStore{},
 				client: mockClient{
 					fail: true,
 				},
 			},
-			want: dto.GetCardsPayload{},
+			want:    dto.GetCardsPayload{},
 			wantErr: true,
 		},
 	}
@@ -210,14 +212,13 @@ func TestCardsService_GetByUser(t *testing.T) {
 				store:  tt.fields.store,
 				client: tt.fields.client,
 			}
+
 			got, err := c.GetByUser(tt.args.email)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetByUser() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if !tt.wantErr {
+				require.Nil(t, err, "failed to execute GetByUser()")
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetByUser() got = %v, want %v", got, tt.want)
-			}
+
+			assert.Equal(t, got, tt.want, "response does not match expected output")
 		})
 	}
 }

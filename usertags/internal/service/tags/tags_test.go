@@ -4,7 +4,8 @@ import (
 	"articles/usertags/internal/dto"
 	"articles/usertags/internal/model"
 	"errors"
-	"reflect"
+	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -76,8 +77,10 @@ func TestTagsService_Add(t *testing.T) {
 			l := Tags{
 				store: tt.fields.store,
 			}
-			if err := l.Add(tt.args.email, tt.args.t); (err != nil) != tt.wantErr {
-				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
+
+			err := l.Add(tt.args.email, tt.args.t)
+			if !tt.wantErr {
+				require.Nil(t, err, "failed to execute Add()")
 			}
 		})
 	}
@@ -117,7 +120,7 @@ func TestTags_Get(t *testing.T) {
 			args: args{
 				email: "user@test.com",
 			},
-			want: dto.GetTagsPayload{},
+			want:    dto.GetTagsPayload{},
 			wantErr: true,
 		},
 	}
@@ -127,13 +130,11 @@ func TestTags_Get(t *testing.T) {
 				store: tt.fields.store,
 			}
 			got, err := l.Get(tt.args.email)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if !tt.wantErr {
+				require.Nil(t, err, "failed to execute Get()")
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Get() got = %v, want %v", got, tt.want)
-			}
+
+			assert.Equal(t, got, tt.want, "response did not match expected output")
 		})
 	}
 }
