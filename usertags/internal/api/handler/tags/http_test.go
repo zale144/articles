@@ -135,6 +135,14 @@ func TestGet(t *testing.T) {
 			},
 			want:    []string{"tag1", "tag2"},
 			wantCode: http.StatusOK,
+		}, {
+			name: "fail service",
+			args: args{
+				svc: mockTagService{
+					fail: true,
+				},
+			},
+			wantCode: http.StatusBadRequest,
 		},
 	}
 

@@ -3,9 +3,12 @@ package config
 import (
 	"github.com/spf13/viper"
 	"log"
+	"os"
+	"strings"
 )
 
 const (
+	configPath = "NF_CONFIG"
 	JWTSecret = "jwtsecret"
 	HttpPort  = "http.port"
 	GrpcHost  = "grpc.host"
@@ -19,14 +22,23 @@ const (
 )
 
 func Configure() error {
-	viper.SetConfigFile("internal/config/config.yaml")
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	viper.SetEnvPrefix("NF")
 	viper.AutomaticEnv()
+	path := "internal/config/config.yaml"
+
+	if ep := os.Getenv(configPath); len(ep) > 0 {
+		path = ep
+	}
+
+	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err == nil {
 		log.Println("Using config file:", viper.ConfigFileUsed())
 	} else {
-		return err
+		log.Println(err)
 	}
 
-	return nil
+	return viper.MergeInConfig()
 }

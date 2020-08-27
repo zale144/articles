@@ -10,7 +10,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// Setup initiates DB connection. If success it will return a pointer to GORM DB instance.
 func Setup() (*gorm.DB, error) {
 
 	db, err := gorm.Open("postgres", fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
@@ -18,8 +17,6 @@ func Setup() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	db.LogMode(true)
 
 	db.AutoMigrate(
 		&model.User{},
@@ -29,7 +26,6 @@ func Setup() (*gorm.DB, error) {
 	db.Model(&model.UserTags{}).
 		AddForeignKey(`"user_id"`, `"user"(id)`, "RESTRICT", "RESTRICT").
 		AddForeignKey(`"tag_id"`, `"tag"(id)`, "RESTRICT", "RESTRICT")
-
 
 	return db, nil
 }

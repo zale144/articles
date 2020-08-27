@@ -1,0 +1,249 @@
+{
+	"info": {
+		"_postman_id": "18f6e00c-dc96-4318-87eb-972017a5b55d",
+		"name": "news",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"User1\",\n    \"email\": \"user@example.com\",\n    \"password\": \"asdf\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8000/api/register",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"asdf\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8000/api/login",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "add_tag",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiZXhwIjoxNTk4NDY4MDEwLCJpYXQiOjE1OTg0NjQ0MTB9.3wRw3MZz_InUZ0NvTjwJGMyfXOrrvC60KljjoDctWtQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"tags\": [\"hong\", \"kong\", \"gong\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8000/api/a/tag/",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"a",
+						"tag",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_tags",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiZXhwIjoxNTk4NDY4MDEwLCJpYXQiOjE1OTg0NjQ0MTB9.3wRw3MZz_InUZ0NvTjwJGMyfXOrrvC60KljjoDctWtQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8000/api/a/tag/",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"a",
+						"tag",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_cards_by_tags",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiZXhwIjoxNTk4NDY4MDEwLCJpYXQiOjE1OTg0NjQ0MTB9.3wRw3MZz_InUZ0NvTjwJGMyfXOrrvC60KljjoDctWtQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8002/api/a/card/by-tags?tags=hong&tags=kong",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"a",
+						"card",
+						"by-tags"
+					],
+					"query": [
+						{
+							"key": "tags",
+							"value": "hong"
+						},
+						{
+							"key": "tags",
+							"value": "kong"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "add_card",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiZXhwIjoxNTk4NDY4MDEwLCJpYXQiOjE1OTg0NjQ0MTB9.3wRw3MZz_InUZ0NvTjwJGMyfXOrrvC60KljjoDctWtQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"third\",\n    \"timestamp\": \"2020-08-26T00:20:42Z\",\n    \"tags\": [\"hong\", \"king\", \"kong\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8002/api/a/card/",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"a",
+						"card",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_cards",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiZXhwIjoxNTk4NDY4MDEwLCJpYXQiOjE1OTg0NjQ0MTB9.3wRw3MZz_InUZ0NvTjwJGMyfXOrrvC60KljjoDctWtQ",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8002/api/a/card/",
+					"host": [
+						"localhost"
+					],
+					"port": "8002",
+					"path": [
+						"api",
+						"a",
+						"card",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

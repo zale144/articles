@@ -15,7 +15,7 @@ import (
 func Run(hnd handler.Handler) {
 
 	e := echo.New()
-	e.Debug = true // TODO
+	e.Debug = true
 	e.Use(middleware.CORS())
 	e.Use(middleware.Secure())
 	e.Use(middleware.Logger())

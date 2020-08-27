@@ -8,12 +8,10 @@ func NewCustomValidator(val *validator.Validate) *CustomValidator {
 	}
 }
 
-//CustomValidator struct
 type CustomValidator struct {
 	validator *validator.Validate
 }
 
-//Validate validates the structs
 func (cv *CustomValidator) Validate(i interface{}) error {
 	return cv.validator.Struct(i)
 }

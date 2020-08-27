@@ -11,7 +11,6 @@ import (
 
 )
 
-// Setup initiates DB connection. If success it will return a pointer to DB instance.
 func Setup() (*mongo.Client, error) {
 
 	var cred options.Credential
@@ -19,7 +18,8 @@ func Setup() (*mongo.Client, error) {
 	cred.Username = v.GetString(c.DBUser)
 	cred.Password = v.GetString(c.DBPassword)
 
-	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", v.GetString(c.DBHost), v.GetString(c.DBPort))).SetAuth(cred)
+	connStr := fmt.Sprintf("mongodb://%s:%s", v.GetString(c.DBHost), v.GetString(c.DBPort))
+	clientOptions := options.Client().ApplyURI(connStr).SetAuth(cred)
 
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {

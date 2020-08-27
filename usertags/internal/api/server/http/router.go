@@ -16,7 +16,7 @@ import (
 func Run(hnd handler.Handler)  {
 
 	e := echo.New()
-	e.Debug = true // TODO
+	e.Debug = true
 	e.Use(middleware.CORS())
 	e.Use(middleware.Secure())
 	e.Use(middleware.Logger())
@@ -34,10 +34,8 @@ func Run(hnd handler.Handler)  {
 
 	a.Use(mware.GetUser)
 
-
 	api.POST("/register", hnd.Register)
 	api.POST("/login", hnd.Login)
-
 
 	t := a.Group("/tag")
 

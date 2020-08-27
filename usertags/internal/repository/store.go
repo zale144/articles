@@ -47,7 +47,7 @@ func (u Store) AddTagsToUser(user *model.User) error {
 	}
 
 	var tags []model.Tag
-	if err := tx.Where("keyword iN (?)", words).Find(&tags).Error; err != nil {
+	if err := tx.Where("keyword IN (?)", words).Find(&tags).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

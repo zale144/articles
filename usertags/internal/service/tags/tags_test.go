@@ -24,7 +24,7 @@ func (m mockStore) GetUser(s string, w bool) (*model.User, error) {
 	return u, nil
 }
 
-func (m mockStore) AddTagsToUser(tags []*model.Tag, user *model.User) error {
+func (m mockStore) AddTagsToUser(*model.User) error {
 	if m.fail {
 		return errors.New("")
 	}

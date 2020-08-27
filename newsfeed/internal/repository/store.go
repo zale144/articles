@@ -21,7 +21,6 @@ func NewStore(cln *mongo.Client) Store {
 }
 
 func (u Store) GetCards(tags []string, matchAll bool) ([]model.Card, error) {
-	col := u.client.Database(v.GetString(c.DBName)).Collection("cards")
 
 	op := "$in"
 	if matchAll{
@@ -41,11 +40,15 @@ func (u Store) GetCards(tags []string, matchAll bool) ([]model.Card, error) {
 		}},
 	}}
 
-	findOptions := options.Find()
+	return u.Find(filter)
+}
+
+func (u Store) Find(filter bson.D) ([]model.Card, error) {
+	col := u.client.Database(v.GetString(c.DBName)).Collection("cards")
 
 	var cards []model.Card
 
-	cur, err := col.Find(context.TODO(), filter, findOptions)
+	cur, err := col.Find(context.TODO(), filter, options.Find())
 	if err != nil {
 		return nil, err
 	}
