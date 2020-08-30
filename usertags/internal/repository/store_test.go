@@ -9,6 +9,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
 	"log"
 	"testing"
 )
@@ -87,7 +88,7 @@ func TestStore_AddTagsToUser(t *testing.T) {
 					return u
 				}(),
 			},
-			wantErr: false,
+			wantErr: true,
 		}, {
 			name: "different user",
 			fields: fields{
@@ -130,6 +131,76 @@ func TestStore_AddTagsToUser(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestStore_AddTagsToUser_Race(t *testing.T) {
+
+	user1 := &model.User{
+		Name:     "user1",
+		Email:    "user1@test.com",
+		Password: "asdf",
+	}
+
+	user2 := &model.User{
+		Name:     "user2",
+		Email:    "user2@test.com",
+		Password: "asdf",
+	}
+
+	dbc.Create(user1)
+	dbc.Create(user2)
+
+	user1.Tags = []model.Tag{{Keyword: "tag1"}, {Keyword: "tag2"}}
+	user2.Tags = []model.Tag{{Keyword: "tag2"}, {Keyword: "tag3"}}
+
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		user model.User
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "first user",
+			fields: fields{
+				db: dbc,
+			},
+			args: args{
+				user: *user1,
+			},
+			wantErr: false,
+		}, {
+			name: "second user",
+			fields: fields{
+				db: dbc,
+			},
+			args: args{
+				user: *user2,
+			},
+			wantErr: false,
+		},
+	}
+
+	u := Store{
+		db: dbc,
+	}
+
+	errs := new(errgroup.Group)
+
+	for _, tt := range tests {
+		usr := tt.args.user
+		errs.Go(func() error {
+			return u.AddTagsToUser(&usr)
+		})
+	}
+
+	err := errs.Wait()
+	require.Nil(t, err, "error executing AddTagsToUser()", err)
 }
 
 func TestStore_CreateUser(t *testing.T) {
@@ -252,37 +323,6 @@ func TestStore_GetUser(t *testing.T) {
 			assert.Equal(t, user.Password, got.Password, "the saved user's Password does not match the retrieved one")
 			assert.Equal(t, user.Email, got.Email, "the saved user's Email does not match the retrieved one")
 			assert.Equal(t, user.Tags, got.Tags, "the saved user's Tags do not match the retrieved one")
-		})
-	}
-}
-
-func TestPrepareBulkInsertStmt(t *testing.T) {
-	type args struct {
-		rowsL     int
-		tableName string
-		cols      []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "success",
-			args: args{
-				rowsL:     3,
-				tableName: "tag",
-				cols:      []string{"keyword", "created_at", "updated_at"},
-			},
-			want: "INSERT INTO tag (keyword,created_at,updated_at) VALUES ($1,$2,$3),($4,$5,$6),($7,$8,$9)",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			got := prepareBulkInsertStmt(tt.args.rowsL, tt.args.tableName, tt.args.cols)
-			assert.Equal(t, tt.want, got, "received statement doesn't match the expected one")
-
 		})
 	}
 }
