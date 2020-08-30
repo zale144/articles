@@ -2,6 +2,9 @@ package repository
 
 import (
 	"articles/usertags/internal/model"
+	"articles/usertags/internal/pkg/db"
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"strings"
@@ -20,55 +23,51 @@ func NewStore(db *gorm.DB) Store {
 
 func (u Store) AddTagsToUser(user *model.User) error {
 
-	tx := u.db.Begin()
-
-	valueStrings := []string{}
-	valueArgs := []interface{}{}
-	now := time.Now()
-
-	for _, tag := range user.Tags {
-		valueStrings = append(valueStrings, "(?,?,?)")
-		valueArgs = append(valueArgs, tag.Keyword)
-		valueArgs = append(valueArgs, now)
-		valueArgs = append(valueArgs, now)
+	if len(user.Tags) == 0 {
+		return errors.New("no tags provided")
 	}
 
-	stmt := fmt.Sprintf("INSERT INTO tag (keyword, created_at, updated_at) VALUES %s ON CONFLICT DO NOTHING", strings.Join(valueStrings, ","))
+	return db.Transact(u.db.DB(), func(tx *sql.Tx) (e error) {
 
-	if err := tx.Exec(stmt, valueArgs...).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
+		now := time.Now()
 
-	words := make([]string, len(user.Tags))
+		var valueArgs []interface{}
+		for _, tag := range user.Tags {
+			valueArgs = append(valueArgs, tag.Keyword, now, now)
+		}
 
-	for i := range user.Tags {
-		words[i] = user.Tags[i].Keyword
-	}
+		cols := []string{"keyword", "created_at", "updated_at"}
+		stmt := fmt.Sprintf("%s ON CONFLICT (keyword) DO UPDATE SET keyword = EXCLUDED.keyword, updated_at = NOW() RETURNING id",
+			prepareBulkInsertStmt(len(user.Tags), "tag", cols))
 
-	var tags []model.Tag
-	if err := tx.Where("keyword IN (?)", words).Find(&tags).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
+		rows, e := tx.Query(stmt, valueArgs...)
+		if e != nil {
+			return
+		}
 
-	valueStrings = []string{}
-	valueArgs = []interface{}{}
+		var ids []int
+		for rows.Next() {
+			id := 0
+			if e = rows.Scan(&id); e != nil {
+				return
+			}
+			ids = append(ids, id)
+		}
 
-	for _, tag := range tags {
-		valueStrings = append(valueStrings, "(?,?)")
-		valueArgs = append(valueArgs, user.ID)
-		valueArgs = append(valueArgs, tag.ID)
-	}
+		valueArgs = []interface{}{}
 
-	stmt = fmt.Sprintf("INSERT INTO user_tags (user_id, tag_id) VALUES %s ON CONFLICT DO NOTHING", strings.Join(valueStrings, ","))
+		for _, tagID := range ids {
+			valueArgs = append(valueArgs, user.ID, tagID)
+		}
 
-	if err := tx.Exec(stmt, valueArgs...).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
+		cols = []string{"user_id", "tag_id"}
+		stmt = fmt.Sprintf("%s ON CONFLICT DO NOTHING", prepareBulkInsertStmt(len(ids), "user_tags", cols))
 
-	return tx.Commit().Error
+		if _, e = tx.Exec(stmt, valueArgs...); e != nil {
+			return
+		}
+		return
+	})
 }
 
 func (u Store) GetUser(email string, withTags bool) (*model.User, error) {
@@ -81,12 +80,30 @@ func (u Store) GetUser(email string, withTags bool) (*model.User, error) {
 		return user, nil
 	}
 
-	if err := u.db.Where("email = ?", email).First(user).Error; err != nil {
-		return nil, err
-	}
-	return user, nil
+	return user, u.db.Where("email = ?", email).First(user).Error
 }
 
 func (u Store) CreateUser(user *model.User) error {
 	return u.db.Create(user).Error
+}
+
+func prepareBulkInsertStmt(rowsL int, tableName string, cols []string) string {
+
+	valueStrings := make([]string, 0, rowsL)
+	valueArgs := make([]interface{}, 0, rowsL*len(cols))
+	colsN := len(cols)
+
+	for i := 0; i < rowsL; i++ {
+
+		var placeholders []string
+
+		for j, col := range cols {
+			placeholders = append(placeholders, fmt.Sprintf("$%d", i*colsN+j+1))
+			valueArgs = append(valueArgs, col)
+		}
+
+		valueStrings = append(valueStrings, fmt.Sprintf("(%s)", strings.Join(placeholders, ",")))
+	}
+
+	return fmt.Sprintf("INSERT INTO %s (%s) VALUES %s", tableName, strings.Join(cols, ","), strings.Join(valueStrings, ","))
 }

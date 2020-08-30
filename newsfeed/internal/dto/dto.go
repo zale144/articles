@@ -10,7 +10,7 @@ type ResponseMessage struct {
 }
 
 type GetCardsRequest struct {
-	Tags []string `json:"tags" form:"tags" query:"tags" validate:"eq=2"`
+	Tags []string `json:"tags" form:"tags" query:"tags" validate:"eq=2,unique"`
 }
 
 type GetCardsPayload struct {

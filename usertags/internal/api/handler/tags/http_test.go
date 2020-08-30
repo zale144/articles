@@ -59,6 +59,14 @@ func TestAdd(t *testing.T) {
 			},
 			want:     "could not add tag: internal",
 			wantCode: http.StatusBadRequest,
+		}, {
+			name: "fail validation",
+			args: args{
+				svc:  mockTagService{true},
+				body: dto.AddTagsPayload{},
+			},
+			want:     "Key: 'AddTagsPayload.Tags' Error:Field validation for 'Tags' failed on the 'required' tag",
+			wantCode: http.StatusBadRequest,
 		},
 	}
 
@@ -89,7 +97,7 @@ func TestAdd(t *testing.T) {
 
 			err := Add(tt.args.svc)(ctx)
 			require.Nil(t, err, "error getting card", err)
-			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
+			assert.Equal(t, tt.wantCode, rec.Code, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
@@ -97,7 +105,7 @@ func TestAdd(t *testing.T) {
 			rsp := dto.ResponseMessage{}
 			_ = json.Unmarshal(buf, &rsp)
 
-			assert.Equal(t, rsp.Message, tt.want, "response does not match expected output")
+			assert.Equal(t, tt.want, rsp.Message, "response does not match expected output")
 		})
 	}
 }
@@ -161,7 +169,7 @@ func TestGet(t *testing.T) {
 
 			err := Get(tt.args.svc)(ctx)
 			require.Nil(t, err, "error getting card", err)
-			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
+			assert.Equal(t, tt.wantCode, rec.Code, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
@@ -169,7 +177,7 @@ func TestGet(t *testing.T) {
 			rsp := dto.GetTagsPayload{}
 			_ = json.Unmarshal(buf, &rsp)
 
-			assert.Equal(t, rsp.Tags, tt.want, "response does not match expected output")
+			assert.Equal(t, tt.want, rsp.Tags, "response does not match expected output")
 		})
 	}
 }

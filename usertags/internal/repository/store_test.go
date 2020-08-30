@@ -34,15 +34,23 @@ var dbc *gorm.DB
 
 func TestStore_AddTagsToUser(t *testing.T) {
 
-	user := &model.User{
+	user1 := &model.User{
 		Name:     "user1",
 		Email:    "user1@test.com",
 		Password: "asdf",
 	}
 
-	dbc.Create(user)
+	user2 := &model.User{
+		Name:     "user2",
+		Email:    "user2@test.com",
+		Password: "asdf",
+	}
 
-	user.Tags = []model.Tag{{Keyword: "tag1"}, {Keyword: "tag2"}}
+	dbc.Create(user1)
+	dbc.Create(user2)
+
+	user1.Tags = []model.Tag{{Keyword: "tag1"}, {Keyword: "tag2"}}
+	user2.Tags = []model.Tag{{Keyword: "tag3"}, {Keyword: "tag4"}}
 
 	type fields struct {
 		db *gorm.DB
@@ -62,7 +70,7 @@ func TestStore_AddTagsToUser(t *testing.T) {
 				db: dbc,
 			},
 			args: args{
-				user: *user,
+				user: *user1,
 			},
 			wantErr: false,
 		}, {
@@ -72,7 +80,7 @@ func TestStore_AddTagsToUser(t *testing.T) {
 			},
 			args: args{
 				user: func() model.User {
-					u := *user
+					u := *user1
 					u.Tags = append(u.Tags, model.Tag{
 						Keyword: "tag3",
 					})
@@ -80,6 +88,21 @@ func TestStore_AddTagsToUser(t *testing.T) {
 				}(),
 			},
 			wantErr: false,
+		}, {
+			name: "different user",
+			fields: fields{
+				db: dbc,
+			},
+			args: args{
+				user: *user2,
+			},
+			wantErr: false,
+		}, {
+			name: "no tags provided",
+			args: args{
+				user: model.User{},
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -95,15 +118,15 @@ func TestStore_AddTagsToUser(t *testing.T) {
 
 			exists := &model.User{}
 
-			err = dbc.Model(user).Preload("Tags").Where(tt.args.user).First(exists).Error
+			err = dbc.Model(user1).Preload("Tags").Where(tt.args.user).First(exists).Error
 			if !tt.wantErr {
 				require.Nil(t, err, "error retrieving user")
 				require.NotNil(t, exists)
 
-				assert.Equal(t, exists.Name, tt.args.user.Name, "the saved user's Name does not match the retrieved one")
-				assert.Equal(t, exists.Password, tt.args.user.Password, "the saved user's Password does not match the retrieved one")
-				assert.Equal(t, exists.Email, tt.args.user.Email, "the saved user's Email does not match the retrieved one")
-				assert.Equal(t, len(exists.Tags), len(tt.args.user.Tags), "the saved user's Tags do not match the retrieved one")
+				assert.Equal(t, tt.args.user.Name, exists.Name, "the saved user's Name does not match the retrieved one")
+				assert.Equal(t, tt.args.user.Password, exists.Password, "the saved user's Password does not match the retrieved one")
+				assert.Equal(t, tt.args.user.Email, exists.Email, "the saved user's Email does not match the retrieved one")
+				assert.Equal(t, len(tt.args.user.Tags), len(exists.Tags), "the saved user's Tags do not match the retrieved one")
 			}
 		})
 	}
@@ -112,8 +135,8 @@ func TestStore_AddTagsToUser(t *testing.T) {
 func TestStore_CreateUser(t *testing.T) {
 
 	user := model.User{
-		Name:     "user2",
-		Email:    "user2@test.com",
+		Name:     "user3",
+		Email:    "user3@test.com",
 		Password: "asdf",
 	}
 
@@ -167,10 +190,10 @@ func TestStore_CreateUser(t *testing.T) {
 				require.Nil(t, err, "error retrieving user")
 				require.NotNil(t, exists)
 
-				assert.Equal(t, exists.Name, tt.args.user.Name, "the saved user's Name does not match the retrieved one")
-				assert.Equal(t, exists.Password, tt.args.user.Password, "the saved user's Password does not match the retrieved one")
-				assert.Equal(t, exists.Email, tt.args.user.Email, "the saved user's Email does not match the retrieved one")
-				assert.Equal(t, len(exists.Tags), len(tt.args.user.Tags), "the saved user's Tags do not match the retrieved one")
+				assert.Equal(t, tt.args.user.Name, exists.Name, "the saved user's Name does not match the retrieved one")
+				assert.Equal(t, tt.args.user.Password, exists.Password, "the saved user's Password does not match the retrieved one")
+				assert.Equal(t, tt.args.user.Email, exists.Email, "the saved user's Email does not match the retrieved one")
+				assert.Equal(t, len(tt.args.user.Tags), len(exists.Tags), "the saved user's Tags do not match the retrieved one")
 			}
 		})
 	}
@@ -179,8 +202,8 @@ func TestStore_CreateUser(t *testing.T) {
 func TestStore_GetUser(t *testing.T) {
 
 	user := &model.User{
-		Name:     "user3",
-		Email:    "user3@test.com",
+		Name:     "user4",
+		Email:    "user4@test.com",
 		Password: "asdf",
 	}
 
@@ -225,10 +248,41 @@ func TestStore_GetUser(t *testing.T) {
 			}
 			require.NotNil(t, got, "user must not be nil")
 
-			assert.Equal(t, got.Name, user.Name, "the saved user's Name does not match the retrieved one")
-			assert.Equal(t, got.Password, user.Password, "the saved user's Password does not match the retrieved one")
-			assert.Equal(t, got.Email, user.Email, "the saved user's Email does not match the retrieved one")
-			assert.Equal(t, got.Tags, user.Tags, "the saved user's Tags do not match the retrieved one")
+			assert.Equal(t, user.Name, got.Name, "the saved user's Name does not match the retrieved one")
+			assert.Equal(t, user.Password, got.Password, "the saved user's Password does not match the retrieved one")
+			assert.Equal(t, user.Email, got.Email, "the saved user's Email does not match the retrieved one")
+			assert.Equal(t, user.Tags, got.Tags, "the saved user's Tags do not match the retrieved one")
+		})
+	}
+}
+
+func TestPrepareBulkInsertStmt(t *testing.T) {
+	type args struct {
+		rowsL     int
+		tableName string
+		cols      []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "success",
+			args: args{
+				rowsL:     3,
+				tableName: "tag",
+				cols:      []string{"keyword", "created_at", "updated_at"},
+			},
+			want: "INSERT INTO tag (keyword,created_at,updated_at) VALUES ($1,$2,$3),($4,$5,$6),($7,$8,$9)",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			got := prepareBulkInsertStmt(tt.args.rowsL, tt.args.tableName, tt.args.cols)
+			assert.Equal(t, tt.want, got, "received statement doesn't match the expected one")
+
 		})
 	}
 }

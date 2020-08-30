@@ -82,7 +82,7 @@ func TestStore_AddCard(t *testing.T) {
 			card := model.Card{}
 			err = res.Decode(&card)
 			require.Nil(t, err, "error decoding result from database")
-			assert.Equal(t, card, tt.args.card, "the saved card does not match the retrieved one")
+			assert.Equal(t, tt.args.card, card, "the saved card does not match the retrieved one")
 		})
 	}
 }
@@ -176,7 +176,7 @@ func TestStore_GetCards(t *testing.T) {
 			got, err := u.GetCards(tt.args.tags, tt.args.matchAll)
 			require.Nil(t, err, "failed to execute GetCards()")
 
-			assert.Equal(t, got, tt.want, "the retrieved cards do not match the expected ones")
+			assert.Equal(t, tt.want, got, "the retrieved cards do not match the expected ones")
 		})
 	}
 }

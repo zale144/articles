@@ -72,6 +72,18 @@ func TestUser_Login(t *testing.T) {
 			},
 			args:    args{},
 			wantErr: true,
+		}, {
+			name: "fail password",
+			fields: fields{
+				store: mockStore{},
+			},
+			args: args{
+				userDto: dto.LoginPayload{
+					Email:    "user@test.com",
+					Password: "wrongpass",
+				},
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

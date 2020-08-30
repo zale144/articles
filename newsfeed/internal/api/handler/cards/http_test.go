@@ -68,6 +68,17 @@ func TestAdd(t *testing.T) {
 			},
 			want:     "could not add card: internal",
 			wantCode: http.StatusBadRequest,
+		}, {
+			name: "fail validation",
+			args: args{
+				svc: mockCardService{false},
+				body: dto.Card{
+					Title:     "card1",
+					Timestamp: time.Now(),
+				},
+			},
+			want:     "Key: 'Card.Tags' Error:Field validation for 'Tags' failed on the 'required' tag",
+			wantCode: http.StatusBadRequest,
 		},
 	}
 
@@ -96,14 +107,14 @@ func TestAdd(t *testing.T) {
 
 			err := Add(tt.args.svc)(ctx)
 			require.Nil(t, err, "error adding card", err)
-			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
+			assert.Equal(t, tt.wantCode, rec.Code, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
 
 			rsp := &dto.ResponseMessage{}
 			_ = json.Unmarshal(buf, rsp)
-			assert.Equal(t, rsp.Message, tt.want, "response message is not equal")
+			assert.Equal(t, tt.want, rsp.Message, "response message is not equal")
 		})
 	}
 }
@@ -167,7 +178,7 @@ func TestGet(t *testing.T) {
 
 			err := Get(tt.args.svc)(ctx)
 			require.Nil(t, err, "error getting card", err)
-			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
+			assert.Equal(t, tt.wantCode, rec.Code, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
@@ -175,7 +186,7 @@ func TestGet(t *testing.T) {
 			rsp := dto.GetCardsPayload{}
 			_ = json.Unmarshal(buf, &rsp)
 
-			assert.Equal(t, rsp, tt.want, "response does not match expected output")
+			assert.Equal(t, tt.want, rsp, "response does not match expected output")
 		})
 	}
 }
@@ -190,7 +201,8 @@ func (m mockCardService) GetByTags(tags []string) (dto.GetCardsPayload, error) {
 
 func TestGetByTags(t *testing.T) {
 	type args struct {
-		svc CardService
+		svc  CardService
+		tags []string
 	}
 	tests := []struct {
 		name     string
@@ -201,16 +213,30 @@ func TestGetByTags(t *testing.T) {
 		{
 			name: "success",
 			args: args{
-				svc: mockCardService{},
+				svc:  mockCardService{},
+				tags: []string{"tag1", "tag2"},
 			},
 			want:     getCardsPayload,
 			wantCode: http.StatusOK,
 		}, {
 			name: "fail service",
 			args: args{
-				svc: mockCardService{
-					fail: true,
-				},
+				svc:  mockCardService{fail: true},
+				tags: []string{"tag1", "tag2"},
+			},
+			wantCode: http.StatusBadRequest,
+		}, {
+			name: "fail validation: not enough tags",
+			args: args{
+				svc:  mockCardService{},
+				tags: []string{"tag1"},
+			},
+			wantCode: http.StatusBadRequest,
+		}, {
+			name: "fail validation: tags not unique",
+			args: args{
+				svc:  mockCardService{},
+				tags: []string{"tag1", "tag1"},
 			},
 			wantCode: http.StatusBadRequest,
 		},
@@ -229,8 +255,9 @@ func TestGetByTags(t *testing.T) {
 			rec := httptest.NewRecorder()
 
 			q := url.Values{}
-			q.Add("tags", "tag1")
-			q.Add("tags", "tag2")
+			for _, tag := range tt.args.tags {
+				q.Add("tags", tag)
+			}
 
 			ctx := e.NewContext(&http.Request{
 				Method: echo.GET,
@@ -242,7 +269,7 @@ func TestGetByTags(t *testing.T) {
 
 			err := GetByTags(tt.args.svc)(ctx)
 			require.Nil(t, err, "error getting card", err)
-			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
+			assert.Equal(t, tt.wantCode, rec.Code, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
@@ -250,7 +277,7 @@ func TestGetByTags(t *testing.T) {
 			rsp := dto.GetCardsPayload{}
 			_ = json.Unmarshal(buf, &rsp)
 
-			assert.Equal(t, rsp, tt.want, "response does not match expected output")
+			assert.Equal(t, tt.want, rsp, "response does not match expected output")
 		})
 	}
 }

@@ -135,7 +135,7 @@ func TestCardsService_GetByTags(t *testing.T) {
 				require.Nil(t, err, "failed to execute GetByTags()")
 			}
 
-			assert.Equal(t, got, tt.want, "response does not match expected output")
+			assert.Equal(t, tt.want, got, "response does not match expected output")
 		})
 	}
 }
@@ -218,7 +218,7 @@ func TestCardsService_GetByUser(t *testing.T) {
 				require.Nil(t, err, "failed to execute GetByUser()")
 			}
 
-			assert.Equal(t, got, tt.want, "response does not match expected output")
+			assert.Equal(t, tt.want, got, "response does not match expected output")
 		})
 	}
 }

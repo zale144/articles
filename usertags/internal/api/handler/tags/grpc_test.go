@@ -55,6 +55,30 @@ func TestUser_GetUserTags(t *testing.T) {
 			wantRsp: &pb.UserTagsRsp{
 				Tags: []string{"tag1", "tag2"},
 			},
+		}, {
+			name: "fail service",
+			fields: fields{
+				tagSrvc: mockUserTagsService{fail: true},
+			},
+			args: args{
+				ctx: nil,
+				in: &pb.UserTagsReq{
+					Email: "user@test.com",
+				},
+			},
+			wantRsp: &pb.UserTagsRsp{},
+			wantErr: true,
+		}, {
+			name: "fail validation",
+			fields: fields{
+				tagSrvc: mockUserTagsService{fail: true},
+			},
+			args: args{
+				ctx: nil,
+				in:  &pb.UserTagsReq{},
+			},
+			wantRsp: &pb.UserTagsRsp{},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -65,9 +89,9 @@ func TestUser_GetUserTags(t *testing.T) {
 			gotRsp, err := u.GetUserTags(tt.args.ctx, tt.args.in)
 			if !tt.wantErr {
 				require.Nil(t, err, "failed to execute GetUserTags()")
+				assert.Equal(t, tt.wantRsp, gotRsp, "response does not match expected output")
 			}
 
-			assert.Equal(t, gotRsp, tt.wantRsp, "response does not match expected output")
 		})
 	}
 }

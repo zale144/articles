@@ -134,7 +134,7 @@ func TestTags_Get(t *testing.T) {
 				require.Nil(t, err, "failed to execute Get()")
 			}
 
-			assert.Equal(t, got, tt.want, "response did not match expected output")
+			assert.Equal(t, tt.want, got, "response did not match expected output")
 		})
 	}
 }

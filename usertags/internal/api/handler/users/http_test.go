@@ -61,6 +61,15 @@ func TestLogin(t *testing.T) {
 				},
 			},
 			wantCode: http.StatusUnauthorized,
+		}, {
+			name: "fail validation",
+			args: args{
+				svc: mockUserService{},
+				body: dto.LoginPayload{
+					Password: "secret",
+				},
+			},
+			wantCode: http.StatusBadRequest,
 		},
 	}
 
@@ -88,7 +97,7 @@ func TestLogin(t *testing.T) {
 
 			err := users.Login(tt.args.svc)(ctx)
 			require.Nil(t, err, "error getting card", err)
-			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
+			assert.Equal(t, tt.wantCode, rec.Code, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
@@ -96,7 +105,7 @@ func TestLogin(t *testing.T) {
 			rsp := dto.LoginResponse{}
 			_ = json.Unmarshal(buf, &rsp)
 
-			assert.Equal(t, rsp.Token, tt.want, "response does not match expected output")
+			assert.Equal(t, tt.want, rsp.Token, "response does not match expected output")
 		})
 	}
 }
@@ -147,6 +156,19 @@ func TestRegister(t *testing.T) {
 			},
 			want:     "could not register user: internal",
 			wantCode: http.StatusBadRequest,
+		}, {
+			name: "fail validation",
+			args: args{
+				svc: mockUserService{true},
+				body: dto.RegisterPayload{
+					Name: "User1",
+					LoginPayload: dto.LoginPayload{
+						Password: "secret",
+					},
+				},
+			},
+			want:     "Key: 'RegisterPayload.LoginPayload.Email' Error:Field validation for 'Email' failed on the 'required' tag",
+			wantCode: http.StatusBadRequest,
 		},
 	}
 
@@ -174,7 +196,7 @@ func TestRegister(t *testing.T) {
 
 			err := users.Register(tt.args.svc)(ctx)
 			require.Nil(t, err, "error getting card", err)
-			assert.Equal(t, rec.Code, tt.wantCode, "status code is not equal")
+			assert.Equal(t, tt.wantCode, rec.Code, "status code is not equal")
 
 			resp := rec.Result()
 			buf, _ := ioutil.ReadAll(resp.Body)
@@ -182,7 +204,7 @@ func TestRegister(t *testing.T) {
 			rsp := &dto.ResponseMessage{}
 			_ = json.Unmarshal(buf, rsp)
 
-			assert.Equal(t, rsp.Message, tt.want, "response does not match expected output")
+			assert.Equal(t, tt.want, rsp.Message, "response does not match expected output")
 		})
 	}
 }
